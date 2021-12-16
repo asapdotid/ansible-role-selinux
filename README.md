@@ -1,16 +1,17 @@
-# SELinux
+# Ansible Role SELinux
+
 ![CI Testing](https://github.com/linux-system-roles/selinux/workflows/tox/badge.svg)
 
 ## Expected functionality
 
 Essentially provide mechanisms to manage local customizations:
 
-* Set enforcing/permissive
-* restorecon portions of filesystem tree
-* Set/Get Booleans
-* Set/Get file contexts
-* Manage logins
-* Manage ports
+- Set enforcing/permissive
+- restorecon portions of filesystem tree
+- Set/Get Booleans
+- Set/Get file contexts
+- Manage logins
+- Manage ports
 
 ## Available modules in Ansible
 
@@ -28,18 +29,20 @@ network port type definitions.
 
 ## Requirements
 
-See `meta/requirements.yml` for the requirements.  You must install the
+See `meta/requirements.yml` for the requirements. You must install the
 requirements before using this role:
+
 ```
 ansible-galaxy collection install -vv -r meta/requirements.yml
 ```
+
 See
 https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#using-meta-requirements-yml
 for more information.
 
 ### Modules provided by this repository
 
-* `selinux_modules_facts`: Gather state of SELinux modules
+- `selinux_modules_facts`: Gather state of SELinux modules
 
 ## Usage
 
@@ -50,8 +53,7 @@ The general usage is demonstrated in [selinux-playbook.yml](examples/selinux-pla
 This role can be configured using variables as it is described below.
 
 ```yaml
-vars:
-  [ see below ]
+vars: [see below]
 roles:
   - role: linux-system-roles.selinux
     become: true
@@ -80,25 +82,31 @@ selinux_all_purge: true
 selinux_policy: targeted
 selinux_state: enforcing
 ```
+
 Allowed values for `selinux_state` are `disabled`, `enforcing` and `permissive`.
 
 If `selinux_state` is not set, the SELinux state is not changed.
-If `selinux_policy` is not set and SELinux is to be enabled, it defaults to `targeted`. 
+If `selinux_policy` is not set and SELinux is to be enabled, it defaults to `targeted`.
 If SELinux is already enabled, the policy is not changed.
 
 #### set SELinux booleans
 
 ```yaml
 selinux_booleans:
-  - { name: 'samba_enable_home_dirs', state: 'on' }
-  - { name: 'ssh_sysadm_login', state: 'on', persistent: 'yes' }
+  - { name: "samba_enable_home_dirs", state: "on" }
+  - { name: "ssh_sysadm_login", state: "on", persistent: "yes" }
 ```
 
 #### Set SELinux file contexts
 
 ```yaml
 selinux_fcontexts:
-  - { target: '/tmp/test_dir(/.*)?', setype: 'user_home_dir_t', ftype: 'd', state: 'present' }
+  - {
+      target: "/tmp/test_dir(/.*)?",
+      setype: "user_home_dir_t",
+      ftype: "d",
+      state: "present",
+    }
 ```
 
 Individual modifications can be dropped by setting `state` to `absent`.
@@ -107,7 +115,7 @@ Individual modifications can be dropped by setting `state` to `absent`.
 
 ```yaml
 selinux_ports:
-  - { ports: '22100', proto: 'tcp', setype: 'ssh_port_t', state: 'present' }
+  - { ports: "22100", proto: "tcp", setype: "ssh_port_t", state: "present" }
 ```
 
 #### run restorecon on filesystem trees
@@ -120,9 +128,14 @@ selinux_restore_dirs:
 #### Set linux user to SELinux user mapping
 
 ```yaml
-    selinux_logins:
-      - { login: 'plautrba', seuser: 'staff_u', state: 'absent' }
-      - { login: '__default__', seuser: 'staff_u', serange: 's0-s0:c0.c1023', state: 'present' }
+selinux_logins:
+  - { login: "plautrba", seuser: "staff_u", state: "absent" }
+  - {
+      login: "__default__",
+      seuser: "staff_u",
+      serange: "s0-s0:c0.c1023",
+      state: "present",
+    }
 ```
 
 #### Manage SELinux modules
@@ -130,40 +143,41 @@ selinux_restore_dirs:
 It is possible to maintain SELinux modules using `selinux_modules` variable which would contain a list of dictionaries, e.g.:
 
 ```yaml
-    selinux_modules:
-      - { path: 'localmodule.pp', state: 'enabled' }
-      - { path: 'localmodule.cil', priority: '350', state: 'enabled' }
-      - { name: 'unconfineduser', state: 'disabled' }
-      - { name: 'localmodule', priority: '350', state: 'absent' }
+selinux_modules:
+  - { path: "localmodule.pp", state: "enabled" }
+  - { path: "localmodule.cil", priority: "350", state: "enabled" }
+  - { name: "unconfineduser", state: "disabled" }
+  - { name: "localmodule", priority: "350", state: "absent" }
 ```
 
-  - `path`: a local module file (either .cil or .pp) to be installed on a node, used for installing new modules
-  - `name`: module name, used for enabling disabled modules, disabling enabled modules, removing modules
-  - `priority`: SELinux module priority, default is *"400"*. *"100"* is used for modules installed from *selinux-policy* packages, *"200"* for other modules installed from 3rd party rpms, *"300"* is used by SETroubleshoot
-  - `state`:
-  * `enabled`: install or enable module
-  * `disabled`: disable module
-  * `absent`: remove module
+- `path`: a local module file (either .cil or .pp) to be installed on a node, used for installing new modules
+- `name`: module name, used for enabling disabled modules, disabling enabled modules, removing modules
+- `priority`: SELinux module priority, default is _"400"_. _"100"_ is used for modules installed from _selinux-policy_ packages, _"200"_ for other modules installed from 3rd party rpms, _"300"_ is used by SETroubleshoot
+- `state`:
+
+* `enabled`: install or enable module
+* `disabled`: disable module
+* `absent`: remove module
 
 **Note:** Building modules from source on nodes is not supported.
-However, in many cases a binary *pp* or *cil* module could be used on different systems if all systems support
+However, in many cases a binary _pp_ or _cil_ module could be used on different systems if all systems support
 types, classes and permissions used in the module.
-In case of *pp* module it also needs to be built with the lowest supported policydb module version on target systems,
+In case of _pp_ module it also needs to be built with the lowest supported policydb module version on target systems,
 i.e. on the oldest system.
 
 **Note:** Module priorities are ignored in Red Hat Enterprise Linux 6
 
 ## Ansible Facts
 
-### selinux\_reboot\_required
+### selinux_reboot_required
 
-This custom fact is set to `true` if system reboot is necessary when SELinux is set from `disabled` to `enabled` or vice versa.  Otherwise the fact is set to `false`.  In the case that system reboot is needed, it will be indicated by returning failure from the role which needs to be handled using a `block:`...`rescue:` construct. The reboot needs to be performed in the playbook, the role itself never reboots the managed host. After the reboot the role needs to be reapplied to finish the changes.
+This custom fact is set to `true` if system reboot is necessary when SELinux is set from `disabled` to `enabled` or vice versa. Otherwise the fact is set to `false`. In the case that system reboot is needed, it will be indicated by returning failure from the role which needs to be handled using a `block:`...`rescue:` construct. The reboot needs to be performed in the playbook, the role itself never reboots the managed host. After the reboot the role needs to be reapplied to finish the changes.
 
-### selinux\_installed\_modules
+### selinux_installed_modules
 
 This custom fact represents SELinux module store structure
 
-``` json
+```json
 selinux_installed_modules = {
   <module name>: {
     <module priority>: ("enabled"|"disabled"),
@@ -175,7 +189,7 @@ selinux_installed_modules = {
 
 e.g.
 
-``` json
+```json
 "ansible_facts": {
   "selinux_installed_modules": {
     "abrt": {
@@ -190,6 +204,85 @@ e.g.
     }
   }
 }
+```
+
+example palybook:
+
+```bash
+---
+- hosts: all
+  become: true
+  become_method: sudo
+  become_user: root
+  vars:
+    # Use "targeted" SELinux policy type
+    selinux_policy: targeted
+    # Set "enforcing" mode
+    selinux_state: enforcing
+    # Switch some SELinux booleans
+    selinux_booleans:
+      # Set the 'samba_enable_home_dirs' boolean to 'on' in the current
+      # session only
+      - { name: 'samba_enable_home_dirs', state: 'on' }
+      # Set the 'ssh_sysadm_login' boolean to 'on' permanently
+      - { name: 'ssh_sysadm_login', state: 'on', persistent: 'yes' }
+    # Map '/tmp/test_dir' and its subdirectories to the 'user_home_dir_t'
+    # SELinux file type
+    selinux_fcontexts:
+      - { target: '/tmp/test_dir(/.*)?', setype: 'user_home_dir_t', ftype: 'd' }
+    # Restore SELinux file contexts in '/tmp/test_dir'
+    selinux_restore_dirs:
+      - /tmp/test_dir
+    # Map tcp port 22100 to the 'ssh_port_t' SELinux port type
+    selinux_ports:
+      - { ports: '22100', proto: 'tcp', setype: 'ssh_port_t', state: 'present' }
+    # Map the 'sar-user' Linux user to the 'staff_u' SELinux user
+    selinux_logins:
+      - { login: 'sar-user', seuser: 'staff_u', serange: 's0-s0:c0.c1023',
+          state: 'present' }
+    # Manage modules
+    selinux_modules:
+      # Install the 'localpolicy.cil' with priority 300
+      - { path: "localpolicy.cil", priority: "300", state: "enabled" }
+      # Disable the 'unconfineduser' module with priority 100
+      - { name: "unconfineduser", priority: "100", state: "disabled" }
+      # Remove the 'temporarypolicy' module with priority 400
+      - { name: "temporarypolicy", priority: "400", state: "absent" }
+
+  # Prepare the prerequisites required for this playbook
+  tasks:
+    - name: Creates directory
+      file:
+        path: /tmp/test_dir
+        state: directory
+        mode: "0755"
+    - name: Add a Linux System Roles SELinux User
+      user:
+        comment: Linux System Roles SELinux User
+        name: sar-user
+    - name: execute the role and catch errors
+      block:
+        - name: Include selinux role
+          include_role:
+            name: linux-system-roles.selinux
+      rescue:
+        # Fail if failed for a different reason than selinux_reboot_required.
+        - name: handle errors
+          fail:
+            msg: "role failed"
+          when: not selinux_reboot_required
+
+        - name: restart managed host
+          reboot:
+
+        - name: wait for managed host to come back
+          wait_for_connection:
+            delay: 10
+            timeout: 300
+
+        - name: reapply the role
+          include_role:
+            name: linux-system-roles.selinux
 ```
 
 **NOTE:** Module priority is set to "0" when priorities are not supported, e.g. on Red Hat Enterprise Linux 6
